@@ -10,6 +10,7 @@
 
 namespace mikestecker\videoembedder\services;
 
+use InvalidArgumentException;
 use mikestecker\videoembedder\VideoEmbedder;
 
 use Craft;
@@ -29,8 +30,9 @@ class VideoEmbedderService extends Component
 
     /**
      * Tap the Embed library
+     *
      * @param string $url
-     * @return boolean
+     * @return \Embed\Adapters\Adapter
      */
     public function getInfo($url)
     {
@@ -48,7 +50,7 @@ class VideoEmbedderService extends Component
      */
     public function isVideo($url)
     {
-        return ($this->getInfo($url)->type == 'video');
+            return ($this->getInfo($url)->type == 'video');
     }
 
     /**
@@ -114,17 +116,20 @@ class VideoEmbedderService extends Component
     }
 
 
-
-
     /**
      * Take a url and return the embed code
      *
      * @param string $url
+     * @param array $params
      * @return string
      */
     public function embed( $url, $params = [] ) : string
     {
-        $code = $this->getInfo($url)->code;
+        try {
+            $code = $this->getInfo($url)->code;
+        } catch (InvalidArgumentException $e) {
+            return '';
+        }
 
         // check if theree are any parameters passed along
         if (!empty($params)) {

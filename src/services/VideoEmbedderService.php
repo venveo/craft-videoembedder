@@ -50,7 +50,11 @@ class VideoEmbedderService extends Component
      */
     public function isVideo($url)
     {
+        try {
             return ($this->getInfo($url)->type == 'video');
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**
@@ -125,17 +129,25 @@ class VideoEmbedderService extends Component
      */
     public function embed( $url, $params = [] ) : string
     {
+        // Catch any URL parsing errors
         try {
-            $code = $this->getInfo($url)->code;
+            $info = $this->getInfo($url);
         } catch (InvalidArgumentException $e) {
+            return null;
+        }
+
+        // Check the type and exit if we don't have a video
+        if ($info->type !== 'video') {
             return '';
         }
 
-        // check if theree are any parameters passed along
+        $code = $info->code;
+
+        // check if there are any parameters passed along
         if (!empty($params)) {
             
             // looks like there are, now let's only do this for YouTube and Vimeo
-            if($this->getInfo($url)->type == 'video' && ($this->isYouTube($url) || $this->isVimeo($url)))
+            if(($this->isYouTube($url) || $this->isVimeo($url)))
             {
 
                 // for videos add autoplay check if the embed gets the code
@@ -199,30 +211,33 @@ class VideoEmbedderService extends Component
                 // No parameters passed, just output the code
                 return $code;
             }
-            else
-            {
-                return '';
-            }
+
+            return '';
         }
 
     }
-
 
 
     /**
      * Take a url and return the embed url
      *
      * @param string $url
+     * @param array $params
      * @return string
      */
-    public function getEmbedUrl($url, $params = [] )
+    public function getEmbedUrl($url, $params = [] ): string
     {
-        // looks like there are, now let's only do this for YouTube and Vimeo
-        if($this->getInfo($url)->type == 'video' && ($this->isYouTube($url) || $this->isVimeo($url)))
+        try {
+            $info = $this->getInfo($url);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        if($info->type === 'video')
         {
             $parameters = '';
 
-            // check if theree are any parameters passed along
+            // check if there are any parameters passed along
             if (!empty($params)) {
                 
                 $parameters .= '?';
@@ -248,11 +263,7 @@ class VideoEmbedderService extends Component
                 return $embedUrl;
             }
         }
-        else
-        {
-            // return empty string
-            return '';
-        }
+        return null;
     }
 
 
@@ -263,17 +274,22 @@ class VideoEmbedderService extends Component
      * @param string $url
      * @return string
      */
-    public function getVideoId($url)
+    public function getVideoId($url): ?string
     {
+        try {
+            $info = $this->getInfo($url);
+        } catch (\Exception $e) {
+            return null;
+        }
+
         // looks like there are, now let's only do this for YouTube and Vimeo
-        if($this->getInfo($url)->type == 'video' && ($this->isYouTube($url) || $this->isVimeo($url)))
+        if($info->type == 'video' && ($this->isYouTube($url) || $this->isVimeo($url)))
         {
-            if ($this->isYouTube($url))
-            {
+            if ($this->isYouTube($url)) {
                 return $this->getYouTubeId($url);
             }
-            else if ($this->isVimeo($url))
-            {
+
+            if ($this->isVimeo($url)) {
                 return $this->getVimeoId($url);
             }
         }
@@ -287,13 +303,20 @@ class VideoEmbedderService extends Component
 
     /**
      * Retrieves the thumbnail from a youtube or vimeo video
+     *
      * @param - $url
-     * @return - string
-     * 
-    **/
+     *
+     **@return string|string[]|null
+     */
     public function getVideoThumbnail($url) {
+        try {
+            $info = $this->getInfo($url);
+        } catch (\Exception $e) {
+            return null;
+        }
+
         // check for vimeo, I don't like the way Embed returns the Vimeo thumbnail
-        if($this->getInfo($url)->type == 'video' && $this->isVimeo($url))
+        if($info->type == 'video' && $this->isVimeo($url))
         {
             $id = $this->getVimeoId($url);
             
@@ -304,20 +327,16 @@ class VideoEmbedderService extends Component
             
             return $image;
         }
-        else
-        {
-            // not vimeo, use Embed
-            $image = $this->cleanUrl($this->getInfo($url)->image);
-            
-            // Check if anything exists
-            if (!empty($image)) {
-                return $image;
-            }
-            else
-            {
-                return '';
-            }
+
+        // not vimeo, use Embed
+        $image = $this->cleanUrl($info->image);
+
+        // Check if anything exists
+        if (!empty($image)) {
+            return $image;
         }
+
+        return '';
     }
 
     private function cleanUrl($url) {

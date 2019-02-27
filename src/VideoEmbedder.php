@@ -16,13 +16,9 @@ use mikestecker\videoembedder\fields\Video as VideoField;
 
 use Craft;
 use craft\base\Plugin;
-use craft\services\Plugins;
-use craft\events\PluginEvent;
 use craft\web\twig\variables\CraftVariable;
 use craft\services\Fields;
-use craft\web\UrlManager;
 use craft\events\RegisterComponentTypesEvent;
-use craft\events\RegisterUrlRulesEvent;
 
 
 use yii\base\Event;
@@ -34,7 +30,7 @@ use yii\base\Event;
  * @package   VideoEmbedder
  * @since     1.0.0
  *
- * @property  VideoEmbedderServiceService $videoEmbedderService
+ * @property  VideoEmbedderService $service
  */
 class VideoEmbedder extends Plugin
 {
@@ -46,16 +42,6 @@ class VideoEmbedder extends Plugin
      */
     public static $plugin;
 
-    // Public Properties
-    // =========================================================================
-
-    /**
-     * @var string
-     */
-    public $schemaVersion = '1.0.0';
-
-    // Public Methods
-    // =========================================================================
 
     /**
      * @inheritdoc
@@ -71,7 +57,7 @@ class VideoEmbedder extends Plugin
 		]);
 		
 		Event::on(
-            Fields::className(),
+            Fields::class,
             Fields::EVENT_REGISTER_FIELD_TYPES,
             function (RegisterComponentTypesEvent $event) {
                 $event->types[] = VideoField::class;
@@ -85,15 +71,6 @@ class VideoEmbedder extends Plugin
                 /** @var CraftVariable $variable */
                 $variable = $event->sender;
                 $variable->set('videoEmbedder', VideoEmbedderVariable::class);
-            }
-        );
-
-        Event::on(
-            Plugins::class,
-            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-            function (PluginEvent $event) {
-                if ($event->plugin === $this) {
-                }
             }
         );
 

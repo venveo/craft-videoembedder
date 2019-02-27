@@ -37,7 +37,6 @@
 			event.preventDefault();
 
 			this.$preview.addClass('is-loading');
-			//this.$embedDataInput.val(null);
 			this.$spinner.removeClass('hidden');
 
 			jxhr = $.get(this.options.endpointUrl, {
@@ -46,7 +45,6 @@
 			});
 
 			jxhr.done(function(data, textStatus, jqXHR) {
-				//console.log(data);
 				self.$preview.html(data);
 			});
 
@@ -57,6 +55,7 @@
 			jxhr.always(function() {
 				Craft.initUiElements(self.$preview);
 				self.$preview.removeClass('is-loading');
+                self.$preview.addClass('is-loaded');
 				self.$spinner.addClass('hidden');
 			});
 		},
